@@ -1,19 +1,22 @@
 package com.github.gamemechs.web.controller;
 
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.github.gamemechs.model.TarsusUser;
-import com.github.gamemechs.model.UserStatus;
+import com.github.gamemechs.web.exception.InvalidUserStatusException;
 import com.github.gamemechs.web.service.UserPresenceService;
 
 /**
@@ -25,21 +28,19 @@ public class UserPresenceController {
     @Autowired
     private UserPresenceService tarsusUserPresenceService;
 
-    @GetMapping("/users/online")
-    public List<TarsusUser> getOnlineUsers() {
-        return tarsusUserPresenceService.getUserByStatus(UserStatus.ONLINE);
+    @GetMapping("/users")
+    public Set<TarsusUser> getAllUsers() {
+        return tarsusUserPresenceService.getAllUsers();
     }
 
-    @GetMapping("/users/offline")
-    public List<TarsusUser> getOfflineUsers() {
-        return tarsusUserPresenceService.getUserByStatus(UserStatus.OFFLINE);
+    @GetMapping("/users/{status}")
+    public Set<TarsusUser> getUsers(@PathVariable String status) {
+        try {
+            return tarsusUserPresenceService.getUsersByStatus(status);
 
-    }
-
-    @GetMapping("/users/idle")
-    public List<TarsusUser> getIdleUsers() {
-        return tarsusUserPresenceService.getUserByStatus(UserStatus.IDLE);
-
+        } catch (InvalidUserStatusException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid User Status", ex);
+        }
     }
 
     @GetMapping("/")
@@ -48,14 +49,18 @@ public class UserPresenceController {
         //For health checks
     }
 
-    @MessageMapping("/users.update")
-    public TarsusUser broadcastUser(@Payload Long user) {
-        return null;
+    @MessageMapping("/user/update")
+    @SendTo("/topic/user/update")
+    public TarsusUser broadcastUser(@Payload TarsusUser user) throws Exception {
+
+        tarsusUserPresenceService.udpateUserStatus(user);
+
+        return user;
     }
 
     @MessageExceptionHandler
     @SendToUser(value = "/queue/errors", broadcast = false)
-    public String handleException(Exception e) {
-        return null;
+    public String handleException(Throwable exception) {
+        return exception.getMessage();
     }
 }

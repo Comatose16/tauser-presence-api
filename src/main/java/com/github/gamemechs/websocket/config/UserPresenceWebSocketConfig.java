@@ -16,8 +16,8 @@ public class UserPresenceWebSocketConfig implements WebSocketMessageBrokerConfig
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/user").setAllowedOrigins("*");
-        registry.addEndpoint("/user").setAllowedOrigins("*").withSockJS();
+        registry.addEndpoint("/user/update").setAllowedOrigins("*");
+        registry.addEndpoint("/user/update").setAllowedOrigins("*").withSockJS();
     }
 
     @Override

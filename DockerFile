@@ -1,0 +1,15 @@
+# Base image using a multi-stage build
+# Use Maven to build the application
+FROM maven:3.6.0-jdk-8-alpine as build
+WORKDIR /usr/src/app
+COPY pom.xml .
+COPY src ./src
+RUN ["mvn", "install"]
+
+# Use java to execute the jar
+FROM openjdk:8-jre-alpine
+# Make port 8080 available to the world outside this container
+EXPOSE 8080
+COPY --from=build /usr/src/app/target/tauser-presence-api.jar tauser-presence-api.jar
+# Run the jar file
+ENTRYPOINT ["java", "-jar", "tauser-presence.jar"]

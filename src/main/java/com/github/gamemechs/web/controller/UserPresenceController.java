@@ -20,7 +20,8 @@ import com.github.gamemechs.web.exception.InvalidUserStatusException;
 import com.github.gamemechs.web.service.UserPresenceService;
 
 /**
- * The {@code UserPresenceController} handles both RESTful and websocket requests.
+ * The {@code UserPresenceController} handles both RESTful and websocket requests for
+ * the Tarsus user presence.
  */
 @RestController
 public class UserPresenceController {
